@@ -38,20 +38,21 @@ int main(int argc, const char *args[]) {
 	);
 
 	socklen_t len;
-	char      buffer[1024];
-	size_t    n = recvfrom(
-        sock_fd,
-        buffer,
-        sizeof(buffer) / sizeof(buffer[0]),
-        0,
-        (struct sockaddr *) &server_addr,
-        &len
-    );
+	char      buffer[256];
+	while (1) {
+		size_t n = recvfrom(
+			sock_fd,
+			buffer,
+			sizeof(buffer) / sizeof(buffer[0]),
+			0,
+			(struct sockaddr *) &server_addr,
+			&len
+		);
 
-	buffer[n] = '\0';
-	printf("Server says: %s\n", buffer);
+		buffer[n] = '\0';
+		printf("Server says: %s\n", buffer);
+	}
 
-	// return 0;
 	Game game;
 
 	if (!GameInit(&game, argc, args)) {

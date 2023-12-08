@@ -1,70 +1,110 @@
 #include "server/server.h"
+#include "utils/collection.h"
+#include "utils/timer.h"
 
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
-#include <time.h>
+
+CNG_Collection client_collection;
+CNG_Server     server;
+
+CNG_ServerMessageBuffer message_buffer;
+
+uint32_t        current_tick = 0;
+pthread_mutex_t mutex;
+pthread_cond_t  cond;
+
+void *sending_thread(void *arg) {
+	uint32_t my_tick = 0;
+	while (1) {
+		pthread_mutex_lock(&mutex);
+		while (my_tick >= current_tick) pthread_cond_wait(&cond, &mutex);
+		my_tick++;
+
+		CNG_CollectionIterator it = CNG_CollectionStartIteration();
+		while (CNG_CollectionNext(&client_collection, &it))
+			CNG_ServerSend(&server, &message_buffer, it.data);
+
+		pthread_mutex_unlock(&mutex);
+	}
+}
+
+int loop_test(uint32_t tick_number) {
+	pthread_mutex_lock(&mutex);
+	current_tick = tick_number;
+	if (tick_number % 10 == 0) printf("Tick %u\n", tick_number);
+	pthread_cond_broadcast(&cond);
+	pthread_mutex_unlock(&mutex);
+	return false;
+}
+
+void *main_server_thread(void *tid) {
+	printf("Started main server thread with tid: %lu...\n", *(pthread_t *) tid);
+
+	CNG_StartTimerWithFrequency(1, loop_test);
+
+	pthread_exit(NULL);
+}
+
+bool compare_clients(void *a, void *b) {
+	CNG_ClientAddress *client_a = a;
+	CNG_ClientAddress *client_b = b;
+	if (client_a->addr_size != client_b->addr_size) return false;
+	if (client_a->addr.sin_addr.s_addr != client_b->addr.sin_addr.s_addr)
+		return false;
+	if (client_a->addr.sin_port != client_b->addr.sin_port) return false;
+
+	return true;
+}
 
 int main() {
-	CNG_Server server;
-	CNG_ServerInit(&server, 7878);
-
-	CNG_ServerMessageBuffer msg_buffer;
-	CNG_ClientAddress       client_addr;
-
-	const uint32_t tick_rate            = 64;
-	const float    suspend_time_seconds = 1.f / (float) tick_rate;
-	const uint32_t suspend_time_microseconds
-		= (uint32_t) (suspend_time_seconds * 1e6);
-
-	uint32_t   server_ticks = 0;
-	useconds_t to_sleep     = suspend_time_microseconds;
-
-	struct timeval tv;
-	struct timeval new_tv;
-	gettimeofday(&tv, NULL);
-
-	// Time point at which we should update
-	float next_update = 0;
-
-	while (1) {
-		gettimeofday(&new_tv, NULL);
-		new_tv.tv_sec -= tv.tv_sec;
-		new_tv.tv_usec -= tv.tv_usec;
-		float seconds = (float) new_tv.tv_sec + (float) new_tv.tv_usec / 1e6f;
-
-		if (seconds >= next_update) {
-			// TICK!
-
-			server_ticks++;
-			printf(
-				"Ticks: %d, tick rate: %f tps\n",
-				server_ticks,
-				(float) server_ticks / seconds
-			);
-			next_update += suspend_time_seconds;
-		} else {
-			printf("Error\n");
-		}
-
-		to_sleep = (useconds_t) ((next_update - seconds) * 1e6);
-		usleep(to_sleep);
+	if (pthread_mutex_init(&mutex, NULL) != 0) {
+		printf("\nmutex init failed\n");
+		return 1;
 	}
 
+	if (pthread_cond_init(&cond, NULL) != 0) {
+		printf("\ncond init failed\n");
+		return 1;
+	}
+
+	strcpy(message_buffer.buffer, "123");
+	message_buffer.size = strlen(message_buffer.buffer);
+
+	CNG_CollectionCreate(&client_collection, compare_clients);
+
+	CNG_ServerInit(&server, 7878);
+
+	pthread_t tick_tid;
+	pthread_create(&tick_tid, NULL, main_server_thread, &tick_tid);
+	pthread_t sender_tid;
+	pthread_create(&sender_tid, NULL, sending_thread, NULL);
+
 	while (1) {
-		CNG_ServerReceive(&server, &msg_buffer, &client_addr);
+		CNG_ClientAddress      *client_addr = malloc(sizeof(CNG_ClientAddress));
+		CNG_ServerMessageBuffer msg_buffer;
+		CNG_ServerReceive(&server, &msg_buffer, client_addr);
 
-		msg_buffer.buffer[msg_buffer.size] = '\0';
-		printf("Client : %s\n", msg_buffer.buffer);
+		printf("Client connected!\n");
 
-		CNG_ServerMessageBuffer answer;
-		strcpy(answer.buffer, "Hello from server");
-		answer.size = strlen(answer.buffer);
-		CNG_ServerSend(&server, &answer, &client_addr);
-		printf("Message sent!\n");
+		pthread_mutex_lock(&mutex);
+		CNG_CollectionInsert(&client_collection, client_addr);
+		pthread_mutex_unlock(&mutex);
 
 		if (strcmp(msg_buffer.buffer, "exit") == 0) break;
 	}
+
+	pthread_cancel(tick_tid);
+	pthread_cancel(sender_tid);
+
+	pthread_mutex_destroy(&mutex);
+	pthread_cond_destroy(&cond);
+
+	// Free the allocated clients
+	CNG_CollectionIterator it = CNG_CollectionStartIteration();
+	while (CNG_CollectionNext(&client_collection, &it)) free(it.data);
+	CNG_CollectionDestroy(&client_collection);
 
 	CNG_ServerClose(&server);
 }

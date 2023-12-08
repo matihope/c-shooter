@@ -20,7 +20,7 @@ typedef struct {
 	int socket_fd;
 } CNG_Server;
 
-#define CNG_BUFFER_SIZE 1024
+#define CNG_BUFFER_SIZE 256
 
 typedef struct {
 	char    buffer[CNG_BUFFER_SIZE];

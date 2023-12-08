@@ -26,6 +26,7 @@ static int create_socket(uint16_t port) {
 
 bool CNG_ServerInit(CNG_Server *server, uint16_t port) {
 	server->socket_fd = create_socket(port);
+	return true;
 }
 
 void CNG_ServerClose(CNG_Server *server) { close(server->socket_fd); }
