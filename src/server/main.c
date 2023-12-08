@@ -1,89 +1,70 @@
-#include <errno.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include "server/server.h"
 
-#define PORT 8080
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+#include <time.h>
 
 int main() {
-	int                sock;
-	struct sockaddr_in server_addr;
+	CNG_Server server;
+	CNG_ServerInit(&server, 7878);
 
-	if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
-		switch (errno) {
-		case EPROTONOSUPPORT:
-			fprintf(
-				stderr,
-				"The protocol or style is not supported by the "
-				"namespace specified."
+	CNG_ServerMessageBuffer msg_buffer;
+	CNG_ClientAddress       client_addr;
+
+	const uint32_t tick_rate            = 64;
+	const float    suspend_time_seconds = 1.f / (float) tick_rate;
+	const uint32_t suspend_time_microseconds
+		= (uint32_t) (suspend_time_seconds * 1e6);
+
+	uint32_t   server_ticks = 0;
+	useconds_t to_sleep     = suspend_time_microseconds;
+
+	struct timeval tv;
+	struct timeval new_tv;
+	gettimeofday(&tv, NULL);
+
+	// Time point at which we should update
+	float next_update = 0;
+
+	while (1) {
+		gettimeofday(&new_tv, NULL);
+		new_tv.tv_sec -= tv.tv_sec;
+		new_tv.tv_usec -= tv.tv_usec;
+		float seconds = (float) new_tv.tv_sec + (float) new_tv.tv_usec / 1e6f;
+
+		if (seconds >= next_update) {
+			// TICK!
+
+			server_ticks++;
+			printf(
+				"Ticks: %d, tick rate: %f tps\n",
+				server_ticks,
+				(float) server_ticks / seconds
 			);
-			break;
-		case EMFILE:
-			fprintf(
-				stderr,
-				"The process already has too many file descriptors open."
-			);
-			break;
-		case ENFILE:
-			fprintf(
-				stderr, "The system already has too many file descriptors open."
-			);
-			break;
-		case EACCES:
-			fprintf(
-				stderr,
-				"The process does not have the privilege to create a socket of "
-				"the specified style or protocol."
-			);
-			break;
-		case ENOBUFS:
-			fprintf(stderr, "The system ran out of internal buffer space.");
-			break;
+			next_update += suspend_time_seconds;
+		} else {
+			printf("Error\n");
 		}
-		perror("socket");
-		exit(EXIT_FAILURE);
+
+		to_sleep = (useconds_t) ((next_update - seconds) * 1e6);
+		usleep(to_sleep);
 	}
 
-	server_addr.sin_family      = AF_INET;
-	server_addr.sin_port        = htons(7878);
-	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	if (bind(sock, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
-		perror("bind");
-		exit(EXIT_FAILURE);
+	while (1) {
+		CNG_ServerReceive(&server, &msg_buffer, &client_addr);
+
+		msg_buffer.buffer[msg_buffer.size] = '\0';
+		printf("Client : %s\n", msg_buffer.buffer);
+
+		CNG_ServerMessageBuffer answer;
+		strcpy(answer.buffer, "Hello from server");
+		answer.size = strlen(answer.buffer);
+		CNG_ServerSend(&server, &answer, &client_addr);
+		printf("Message sent!\n");
+
+		if (strcmp(msg_buffer.buffer, "exit") == 0) break;
 	}
 
-	socklen_t len;
-	int       n;
-
-	struct sockaddr_in client_addr;
-	len = sizeof(client_addr);
-	char buffer[1024];
-
-	n = recvfrom(
-		sock,
-		buffer,
-		sizeof(buffer) / sizeof(buffer[0]),
-		0,
-		(struct sockaddr *) &client_addr,
-		&len
-	);
-
-	buffer[n] = '\0';
-	printf("Client : %s\n", buffer);
-
-	const char *hello = "Hello from server!";
-	sendto(
-		sock,
-		hello,
-		strlen(hello),
-		MSG_CONFIRM,
-		(const struct sockaddr *) &client_addr,
-		len
-	);
-	printf("Hello message sent...\n");
-
-	close(sock);
+	CNG_ServerClose(&server);
 }

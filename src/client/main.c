@@ -14,12 +14,12 @@ void init_sockaddr(
 
 	name->sin_family = AF_INET;
 	name->sin_port   = htons(port);
-	hostinfo         = gethostbyname(hostname);
+	hostinfo         = gethostbyname2(hostname, AF_INET);
 	if (hostinfo == NULL) {
 		fprintf(stderr, "Unknown host %s.\n", hostname);
 		exit(EXIT_FAILURE);
 	}
-	name->sin_addr = *(struct in_addr *) hostinfo->h_addr;
+	name->sin_addr = *(struct in_addr *) hostinfo->h_addr_list[0];
 }
 
 int main(int argc, const char *args[]) {
@@ -32,18 +32,18 @@ int main(int argc, const char *args[]) {
 		sock_fd,
 		client_hello,
 		strlen(client_hello),
-		MSG_CONFIRM,
+		0,
 		(const struct sockaddr *) &server_addr,
 		sizeof(server_addr)
 	);
 
 	socklen_t len;
 	char      buffer[1024];
-	int       n = recvfrom(
+	size_t    n = recvfrom(
         sock_fd,
         buffer,
         sizeof(buffer) / sizeof(buffer[0]),
-        MSG_WAITALL,
+        0,
         (struct sockaddr *) &server_addr,
         &len
     );
