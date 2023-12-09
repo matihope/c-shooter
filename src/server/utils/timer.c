@@ -7,7 +7,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-void CNG_StartTimerWithFrequency(
+void CNG_startTimerWithFrequency(
 	uint32_t tick_rate, int (*callback)(uint32_t)
 ) {
 	const double suspend_time_seconds = 1.0 / (double) tick_rate;

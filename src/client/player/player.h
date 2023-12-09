@@ -10,8 +10,8 @@ typedef struct {
 	CNG_Rect rect;
 } Player;
 
-Player PlayerInit(CNG_Color color, CNG_Vector2f position);
+Player Player_init(CNG_Color color, CNG_Vector2f position);
 
-void PlayerUpdate(Player *player, const float dt);
+void Player_update(Player *player, float dt);
 
-void PlayerDraw(Player *player, CNG_Window *window);
+void Player_draw(Player *player, CNG_Window *window);

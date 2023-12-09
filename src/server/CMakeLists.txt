@@ -7,4 +7,5 @@ add_executable(server main.c
         utils/timer.c
         utils/collection.h
         utils/collection.c
+        server/game_server.h
 )

@@ -5,14 +5,14 @@
 
 #include "player.h"
 
-Player PlayerInit(CNG_Color color, CNG_Vector2f position) {
+Player Player_init(CNG_Color color, CNG_Vector2f position) {
 	return (Player
 	){ .rect = (CNG_Rect){ .color    = color,
 		                   .position = position,
 		                   .size     = (CNG_Vector2f){ .x = 50, .y = 50 } } };
 }
 
-void PlayerUpdate(Player *player, const float dt) {
+void Player_update(Player *player, const float dt) {
 	const Uint8 *current_key_states = SDL_GetKeyboardState(NULL);
 
 	float d_x = (float) current_key_states[SDL_SCANCODE_D]
@@ -23,6 +23,6 @@ void PlayerUpdate(Player *player, const float dt) {
 	player->rect.position.y += 500 * d_y * dt;
 }
 
-void PlayerDraw(Player *player, CNG_Window *window) {
-	CNG_RectDraw(&player->rect, window);
+void Player_draw(Player *player, CNG_Window *window) {
+	CNG_Rect_draw(&player->rect, window);
 }

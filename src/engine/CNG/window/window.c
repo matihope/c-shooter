@@ -4,7 +4,7 @@
  */
 #include "window.h"
 
-bool CNG_WindowInit(
+bool CNG_Window_init(
 	CNG_Window *cng_window,
 	const char *title,
 	int         window_width,
@@ -48,7 +48,7 @@ bool CNG_WindowInit(
 	return success;
 }
 
-void CNG_WindowDestroy(CNG_Window *window) {
+void CNG_Window_destroy(CNG_Window *window) {
 	SDL_DestroyWindow(window->window);
 	window->window = NULL;
 
@@ -58,13 +58,13 @@ void CNG_WindowDestroy(CNG_Window *window) {
 	SDL_Quit();
 }
 
-void CNG_WindowClear(CNG_Window *window, CNG_Color color) {
+void CNG_Window_clear(CNG_Window *window, CNG_Color color) {
 	SDL_SetRenderDrawColor(
 		window->window_renderer, color.r, color.g, color.b, color.a
 	);
 	SDL_RenderClear(window->window_renderer);
 }
 
-void CNG_WindowUpdate(CNG_Window *window) {
+void CNG_Window_update(CNG_Window *window) {
 	SDL_RenderPresent(window->window_renderer);
 }

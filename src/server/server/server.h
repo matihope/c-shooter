@@ -32,16 +32,16 @@ typedef struct {
 	socklen_t          addr_size;
 } CNG_ClientAddress;
 
-bool CNG_ServerInit(CNG_Server *server, uint16_t port);
-void CNG_ServerClose(CNG_Server *server);
+int  CNG_Server_init(CNG_Server *server, uint16_t port);
+void CNG_Server_close(CNG_Server *server);
 
-void CNG_ServerReceive(
+void CNG_Server_receive(
 	CNG_Server              *server,
 	CNG_ServerMessageBuffer *buffer,
 	CNG_ClientAddress       *new_client
 );
 
-void CNG_ServerSend(
+void CNG_Server_send(
 	CNG_Server              *server,
 	CNG_ServerMessageBuffer *message,
 	CNG_ClientAddress       *client

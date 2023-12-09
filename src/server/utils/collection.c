@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-void CNG_CollectionCreate(
+void CNG_Collection_create(
 	CNG_Collection *collection, bool (*data_cmp_func)(void *, void *)
 ) {
 	collection->data_cmp_func = data_cmp_func;
@@ -15,11 +15,11 @@ void CNG_CollectionCreate(
 	collection->data          = malloc(sizeof(CNG_CollectionItem));
 }
 
-void CNG_CollectionDestroy(CNG_Collection *collection) {
+void CNG_Collection_destroy(CNG_Collection *collection) {
 	free(collection->data);
 }
 
-bool CNG_CollectionInsert(CNG_Collection *collection, void *data) {
+bool CNG_Collection_insert(CNG_Collection *collection, void *data) {
 	bool unique = true;
 	for (size_t elem_id = 0; elem_id < collection->elements; ++elem_id)
 		if (collection->data_cmp_func(collection->data[elem_id].data, data))
@@ -39,14 +39,12 @@ bool CNG_CollectionInsert(CNG_Collection *collection, void *data) {
 	return unique;
 }
 
-CNG_CollectionIterator CNG_CollectionStartIteration() {
-	CNG_CollectionIterator result;
-	result.data  = NULL;
-	result.index = -1;
-	return result;
+void CNG_CollectionIterator_init(CNG_CollectionIterator *it) {
+	it->data  = NULL;
+	it->index = -1;
 }
 
-int CNG_CollectionNext(
+int CNG_CollectionIterator_next(
 	CNG_Collection *collection, CNG_CollectionIterator *iterator
 ) {
 	iterator->index++;

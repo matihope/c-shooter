@@ -26,15 +26,15 @@ struct CNG_CollectionIterator {
 	ssize_t index;
 };
 
-void CNG_CollectionCreate(
+void CNG_Collection_create(
 	CNG_Collection *collection, bool (*data_cmp_func)(void *, void *)
 );
-void CNG_CollectionDestroy(CNG_Collection *collection);
+void CNG_Collection_destroy(CNG_Collection *collection);
 
-bool CNG_CollectionInsert(CNG_Collection *collection, void *data);
+bool CNG_Collection_insert(CNG_Collection *collection, void *data);
 
-CNG_CollectionIterator CNG_CollectionStartIteration();
+void CNG_CollectionIterator_init(CNG_CollectionIterator* it);
 
-int CNG_CollectionNext(
+int CNG_CollectionIterator_next(
 	CNG_Collection *collection, CNG_CollectionIterator *iterator
 );

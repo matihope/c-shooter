@@ -22,15 +22,15 @@ void *sending_thread(void *arg) {
 		while (my_tick >= current_tick) pthread_cond_wait(&cond, &mutex);
 		my_tick++;
 
-		CNG_CollectionIterator it = CNG_CollectionStartIteration();
-		while (CNG_CollectionNext(&client_collection, &it))
-			CNG_ServerSend(&server, &message_buffer, it.data);
+		CNG_CollectionIterator it = CNG_CollectionIterator_init();
+		while (CNG_CollectionIterator_next(&client_collection, &it))
+			CNG_Server_send(&server, &message_buffer, it.data);
 
 		pthread_mutex_unlock(&mutex);
 	}
 }
 
-int loop_test(uint32_t tick_number) {
+int server_tick_loop(uint32_t tick_number) {
 	pthread_mutex_lock(&mutex);
 	current_tick = tick_number;
 	if (tick_number % 10 == 0) printf("Tick %u\n", tick_number);
@@ -42,7 +42,7 @@ int loop_test(uint32_t tick_number) {
 void *main_server_thread(void *tid) {
 	printf("Started main server thread with tid: %lu...\n", *(pthread_t *) tid);
 
-	CNG_StartTimerWithFrequency(1, loop_test);
+	CNG_startTimerWithFrequency(1, server_tick_loop);
 
 	pthread_exit(NULL);
 }
@@ -72,9 +72,9 @@ int main() {
 	strcpy(message_buffer.buffer, "123");
 	message_buffer.size = strlen(message_buffer.buffer);
 
-	CNG_CollectionCreate(&client_collection, compare_clients);
+	CNG_Collection_create(&client_collection, compare_clients);
 
-	CNG_ServerInit(&server, 7878);
+	CNG_Server_init(&server, 7878);
 
 	pthread_t tick_tid;
 	pthread_create(&tick_tid, NULL, main_server_thread, &tick_tid);
@@ -84,12 +84,12 @@ int main() {
 	while (1) {
 		CNG_ClientAddress      *client_addr = malloc(sizeof(CNG_ClientAddress));
 		CNG_ServerMessageBuffer msg_buffer;
-		CNG_ServerReceive(&server, &msg_buffer, client_addr);
+		CNG_Server_receive(&server, &msg_buffer, client_addr);
 
 		printf("Client connected!\n");
 
 		pthread_mutex_lock(&mutex);
-		CNG_CollectionInsert(&client_collection, client_addr);
+		CNG_Collection_insert(&client_collection, client_addr);
 		pthread_mutex_unlock(&mutex);
 
 		if (strcmp(msg_buffer.buffer, "exit") == 0) break;
@@ -102,9 +102,9 @@ int main() {
 	pthread_cond_destroy(&cond);
 
 	// Free the allocated clients
-	CNG_CollectionIterator it = CNG_CollectionStartIteration();
-	while (CNG_CollectionNext(&client_collection, &it)) free(it.data);
-	CNG_CollectionDestroy(&client_collection);
+	CNG_CollectionIterator it = CNG_CollectionIterator_init();
+	while (CNG_CollectionIterator_next(&client_collection, &it)) free(it.data);
+	CNG_Collection_destroy(&client_collection);
 
-	CNG_ServerClose(&server);
+	CNG_Server_close(&server);
 }

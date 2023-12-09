@@ -55,13 +55,13 @@ int main(int argc, const char *args[]) {
 
 	Game game;
 
-	if (!GameInit(&game, argc, args)) {
+	if (!Game_init(&game, argc, args)) {
 		printf("Failed to initialize!\n");
 		return 1;
 	}
 
-	GameRun(&game);
-	GameDestroy(&game);
+	Game_run(&game);
+	Game_destroy(&game);
 
 	return 0;
 }

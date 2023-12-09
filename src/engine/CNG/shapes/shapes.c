@@ -4,7 +4,7 @@
  */
 #include "shapes.h"
 
-void CNG_RectDraw(CNG_Rect *rect, CNG_Window *window) {
+void CNG_Rect_draw(CNG_Rect *rect, CNG_Window *window) {
 	SDL_SetRenderDrawColor(
 		window->window_renderer,
 		rect->color.r,

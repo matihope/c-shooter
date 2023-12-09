@@ -17,8 +17,8 @@ typedef struct {
 	bool       quit;
 } Game;
 
-bool GameInit(Game *game, int argc, const char *argv[]);
+bool Game_init(Game *game, int argc, const char *argv[]);
 
-void GameDestroy(Game *game);
+void Game_destroy(Game *game);
 
-void GameRun(Game *game);
+void Game_run(Game *game);

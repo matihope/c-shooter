@@ -14,4 +14,4 @@ typedef struct {
 	CNG_Color    color;
 } CNG_Rect;
 
-void CNG_RectDraw(CNG_Rect *rect, CNG_Window *window);
+void CNG_Rect_draw(CNG_Rect *rect, CNG_Window *window);
