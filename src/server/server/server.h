@@ -14,7 +14,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-void print_i32(uint32_t num);
+void print_addr(uint32_t num);
 
 typedef struct {
 	int socket_fd;

@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 void CNG_startTimerWithFrequency(
-	uint32_t tick_rate, int (*callback)(uint32_t)
+	uint32_t tick_rate, void* arg, int (*callback)(uint32_t, void*)
 ) {
 	const double suspend_time_seconds = 1.0 / (double) tick_rate;
 
@@ -28,7 +28,7 @@ void CNG_startTimerWithFrequency(
 		new_tv.tv_usec -= tv.tv_usec;
 		double seconds = (float) new_tv.tv_sec + (float) new_tv.tv_usec / 1e6f;
 
-		if (callback(server_ticks++)) break;
+		if (callback(server_ticks++, arg)) break;
 
 		to_sleep = (useconds_t) ((next_update - seconds) * 1e6);
 		usleep(to_sleep);

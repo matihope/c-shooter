@@ -8,4 +8,5 @@ add_executable(server main.c
         utils/collection.h
         utils/collection.c
         server/game_server.h
+        server/game_server.c
 )

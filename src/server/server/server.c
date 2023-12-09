@@ -71,10 +71,10 @@ void CNG_Server_send(
 	}
 }
 
-void print_i32(uint32_t num) {
+void print_addr(uint32_t num) {
 	char bin_num[33];
 	bin_num[32] = '\0';
-	for (int i = 0; i < 32; i++) bin_num[i] = '0' + num & (1 << i);
+	for (int i = 0; i < 32; i++) bin_num[i] = ((num & (1 << i)) > 0) + '0';
 
-	printf("Number: %s", bin_num);
+	printf("%d == %s == %d.%d.%d.%d", num, bin_num, num << 24 >> 24, num << 16 >> 24, num << 8 >> 24, num >> 24);
 }
