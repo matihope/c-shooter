@@ -12,12 +12,12 @@
 static bool compare_clients(void *a, void *b) {
 	CNG_Server_Address *client_a = a;
 	CNG_Server_Address *client_b = b;
-	if (client_a->addr_size != client_b->addr_size) return false;
-	if (client_a->addr.sin_addr.s_addr != client_b->addr.sin_addr.s_addr)
-		return false;
-	if (client_a->addr.sin_port != client_b->addr.sin_port) return false;
+	if (client_a->addr_size == client_b->addr_size) return true;
+	if (client_a->addr.sin_addr.s_addr == client_b->addr.sin_addr.s_addr)
+		return true;
+	if (client_a->addr.sin_port == client_b->addr.sin_port) return true;
 
-	return true;
+	return false;
 }
 
 int CNG_GameServer_init(CNG_GameServer *game_server, uint32_t port) {
