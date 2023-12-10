@@ -100,17 +100,18 @@ void print_addr(uint32_t num) {
 }
 
 int CNG_Server_createConnection(
-	CNG_Server_Address *server, const char *hostname, uint16_t port
+	CNG_Server_Address *addr, const char *hostname, uint16_t port
 ) {
 	struct hostent *host_info;
 
-	server->addr.sin_family = AF_INET;
-	server->addr.sin_port   = htons(port);
-	host_info               = gethostbyname2(hostname, AF_INET);
+	addr->addr.sin_family = AF_INET;
+	addr->addr.sin_port   = htons(port);
+	host_info             = gethostbyname2(hostname, AF_INET);
 	if (host_info == NULL) {
 		fprintf(stderr, "Unknown host %s.\n", hostname);
 		exit(EXIT_FAILURE);
 	}
-	server->addr.sin_addr = *(struct in_addr *) host_info->h_addr_list[0];
+	addr->addr.sin_addr = *(struct in_addr *) host_info->h_addr_list[0];
+	addr->addr_size     = sizeof(addr->addr);
 	return 0;
 }

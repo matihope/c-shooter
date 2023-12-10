@@ -37,7 +37,7 @@ int  CNG_Server_init(CNG_Server *server);
 int  CNG_Server_host(CNG_Server *server, uint16_t port);
 void CNG_Server_close(CNG_Server *server);
 int  CNG_Server_createConnection(
-	 CNG_Server_Address *server, const char *hostname, uint16_t port
+	 CNG_Server_Address *addr, const char *hostname, uint16_t port
  );
 
 void CNG_Server_receive(
