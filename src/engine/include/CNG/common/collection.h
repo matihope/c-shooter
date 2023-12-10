@@ -5,6 +5,7 @@
 #ifndef COLLECTION_H
 #define COLLECTION_H
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 typedef struct CNG_CollectionItem     CNG_CollectionItem;
