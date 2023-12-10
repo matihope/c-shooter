@@ -2,7 +2,8 @@
  * @file collection.h
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
-#pragma once
+#ifndef COLLECTION_H
+#define COLLECTION_H
 
 #include <stdlib.h>
 
@@ -26,15 +27,22 @@ struct CNG_CollectionIterator {
 	ssize_t index;
 };
 
-void CNG_Collection_create(
+void CNG_Collection_init(
 	CNG_Collection *collection, bool (*data_cmp_func)(void *, void *)
 );
+
+size_t CNG_Collection_size(CNG_Collection *collection);
+
+void CNG_Collection_freeElements(CNG_Collection *collection);
+
 void CNG_Collection_destroy(CNG_Collection *collection);
 
 bool CNG_Collection_insert(CNG_Collection *collection, void *data);
 
-void CNG_CollectionIterator_init(CNG_CollectionIterator* it);
+void CNG_CollectionIterator_init(CNG_CollectionIterator *it);
 
 int CNG_CollectionIterator_next(
 	CNG_Collection *collection, CNG_CollectionIterator *iterator
 );
+
+#endif

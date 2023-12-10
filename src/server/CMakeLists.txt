@@ -1,12 +1,2 @@
-# add_library(server)
-
-add_executable(server main.c
-        server/server.h
-        server/server.c
-        utils/timer.h
-        utils/timer.c
-        utils/collection.h
-        utils/collection.c
-        server/game_server.h
-        server/game_server.c
-)
+add_executable(server_exec server_main.c)
+target_link_libraries(server_exec c_engine)

@@ -1,58 +1,35 @@
+#include "CNG/network.h"
 #include "game/game.h"
 
-#include <netdb.h>
-#include <netinet/in.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-
-void init_sockaddr(
-	struct sockaddr_in *name, const char *hostname, uint16_t port
-) {
-	struct hostent *hostinfo;
-
-	name->sin_family = AF_INET;
-	name->sin_port   = htons(port);
-	hostinfo         = gethostbyname2(hostname, AF_INET);
-	if (hostinfo == NULL) {
-		fprintf(stderr, "Unknown host %s.\n", hostname);
-		exit(EXIT_FAILURE);
-	}
-	name->sin_addr = *(struct in_addr *) hostinfo->h_addr_list[0];
-}
 
 int main(int argc, const char *args[]) {
-	int                sock_fd = socket(PF_INET, SOCK_DGRAM, 0);
-	struct sockaddr_in server_addr;
-	init_sockaddr(&server_addr, "localhost", 7878);
+	CNG_Server server;
+	CNG_Server_init(&server);
 
-	const char *client_hello = "Hello from client!";
-	sendto(
-		sock_fd,
-		client_hello,
-		strlen(client_hello),
-		0,
-		(const struct sockaddr *) &server_addr,
-		sizeof(server_addr)
-	);
+	CNG_Server_Address server_addr;
+	CNG_Server_createConnection(&server_addr, "localhost", 7878);
 
-	socklen_t len;
-	char      buffer[256];
+	CNG_ServerMessageBuffer buffer;
+	strcpy(buffer.buffer, "connect");
+	buffer.size = strlen(buffer.buffer);
+
+	CNG_Server_send(&server, &buffer, &server_addr);
+
+	CNG_Server_receive(&server, &buffer, &server_addr);
+	uint16_t my_id;
+	memcpy(&my_id, buffer.buffer, sizeof(my_id));
+	memset(buffer.buffer, 0, 256);
+
+	printf("My id: %u\n", my_id);
+
 	while (1) {
-		size_t n = recvfrom(
-			sock_fd,
-			buffer,
-			sizeof(buffer) / sizeof(buffer[0]),
-			0,
-			(struct sockaddr *) &server_addr,
-			&len
-		);
+		CNG_Server_receive(&server, &buffer, &server_addr);
+		printf("Server says: %s\n", buffer.buffer);
 
-		buffer[n] = '\0';
-		printf("Server says: %s\n", buffer);
+		CNG_Server_send(&server, &buffer, &server_addr);
 	}
-
 	Game game;
 
 	if (!Game_init(&game, argc, args)) {

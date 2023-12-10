@@ -2,12 +2,13 @@
  * @file window.h
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
-#include "CNG/utils/utils.h"
+#ifndef WINDOW_H
+#define WINDOW_H
+
+#include "base.h"
 
 #include <SDL2/SDL.h>
 #include <stdbool.h>
-
-#pragma once
 
 typedef struct {
 	SDL_Window   *window;
@@ -26,3 +27,5 @@ void CNG_Window_destroy(CNG_Window *window);
 void CNG_Window_clear(CNG_Window *window, CNG_Color color);
 
 void CNG_Window_update(CNG_Window *window);
+
+#endif

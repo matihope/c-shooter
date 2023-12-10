@@ -3,10 +3,12 @@
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
 
-#pragma once
-#include <CNG/math/vector.h>
-#include <CNG/utils/utils.h>
-#include <CNG/window/window.h>
+#ifndef SHAPES_H
+#define SHAPES_H
+
+#include "CNG/common/math.h"
+#include "base.h"
+#include "window.h"
 
 typedef struct {
 	CNG_Vector2f position;
@@ -15,3 +17,5 @@ typedef struct {
 } CNG_Rect;
 
 void CNG_Rect_draw(CNG_Rect *rect, CNG_Window *window);
+
+#endif

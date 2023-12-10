@@ -2,7 +2,7 @@
  * @file window.c
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
-#include "window.h"
+#include "CNG/graphics/window.h"
 
 bool CNG_Window_init(
 	CNG_Window *cng_window,

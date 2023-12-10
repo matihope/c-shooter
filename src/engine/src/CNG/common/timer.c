@@ -2,13 +2,13 @@
  * @file timer.c
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
-#include "timer.h"
+#include "CNG/common/timer.h"
 
 #include <sys/time.h>
 #include <unistd.h>
 
 void CNG_startTimerWithFrequency(
-	uint32_t tick_rate, void* arg, int (*callback)(uint32_t, void*)
+	uint32_t tick_rate, void *arg, int (*callback)(uint32_t, void *)
 ) {
 	const double suspend_time_seconds = 1.0 / (double) tick_rate;
 

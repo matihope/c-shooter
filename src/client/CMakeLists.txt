@@ -4,4 +4,4 @@ add_executable(client main.c
         player/player.h
         player/player.c)
 target_link_libraries(client SDL2)
-target_link_libraries(client c-engine)
+target_link_libraries(client c_engine)

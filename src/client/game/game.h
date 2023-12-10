@@ -3,9 +3,10 @@
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
 
-#pragma once
+#ifndef GAME_H
+#define GAME_H
 
-#include "CNG/window/window.h"
+#include "CNG/graphics.h"
 
 #define SCREEN_WIDTH  1280
 #define SCREEN_HEIGHT 720
@@ -22,3 +23,5 @@ bool Game_init(Game *game, int argc, const char *argv[]);
 void Game_destroy(Game *game);
 
 void Game_run(Game *game);
+
+#endif

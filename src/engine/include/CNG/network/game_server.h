@@ -3,8 +3,10 @@
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
 
-#pragma once
-#include "../utils/collection.h"
+#ifndef GAME_SERVER_H
+#define GAME_SERVER_H
+
+#include "CNG/common/collection.h"
 #include "server.h"
 
 typedef struct {
@@ -23,3 +25,8 @@ void CNG_GameServer_destroy(CNG_GameServer *game_server);
 void CNG_GameServer_startTicking(
 	CNG_GameServer *game_server, uint32_t tick_rate
 );
+
+typedef struct {
+} CNG_GameServerClient;
+
+#endif

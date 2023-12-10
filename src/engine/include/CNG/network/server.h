@@ -3,7 +3,8 @@
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
 
-#pragma once
+#ifndef SERVER_H
+#define SERVER_H
 
 #include <errno.h>
 #include <netinet/in.h>
@@ -30,19 +31,25 @@ typedef struct {
 typedef struct {
 	struct sockaddr_in addr;
 	socklen_t          addr_size;
-} CNG_ClientAddress;
+} CNG_Server_Address;
 
-int  CNG_Server_init(CNG_Server *server, uint16_t port);
+int  CNG_Server_init(CNG_Server *server);
+int  CNG_Server_host(CNG_Server *server, uint16_t port);
 void CNG_Server_close(CNG_Server *server);
+int  CNG_Server_createConnection(
+	 CNG_Server_Address *server, const char *hostname, uint16_t port
+ );
 
 void CNG_Server_receive(
 	CNG_Server              *server,
 	CNG_ServerMessageBuffer *buffer,
-	CNG_ClientAddress       *new_client
+	CNG_Server_Address      *addr
 );
 
 void CNG_Server_send(
 	CNG_Server              *server,
 	CNG_ServerMessageBuffer *message,
-	CNG_ClientAddress       *client
+	CNG_Server_Address      *addr
 );
+
+#endif

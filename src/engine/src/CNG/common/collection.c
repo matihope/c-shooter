@@ -2,11 +2,11 @@
  * @file collection.c
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
-#include "collection.h"
+#include "CNG/common/collection.h"
 
 #include <stdio.h>
 
-void CNG_Collection_create(
+void CNG_Collection_init(
 	CNG_Collection *collection, bool (*data_cmp_func)(void *, void *)
 ) {
 	collection->data_cmp_func = data_cmp_func;
@@ -54,4 +54,14 @@ int CNG_CollectionIterator_next(
 	}
 	iterator->data = collection->data[iterator->index].data;
 	return true;
+}
+
+void CNG_Collection_freeElements(CNG_Collection *collection) {
+	CNG_CollectionIterator it;
+	CNG_CollectionIterator_init(&it);
+	while (CNG_CollectionIterator_next(collection, &it)) free(it.data);
+}
+
+size_t CNG_Collection_size(CNG_Collection *collection) {
+	return collection->elements;
 }

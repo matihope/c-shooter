@@ -2,7 +2,7 @@
  * @file shapes.c
  * @author Mateusz Kołpa (matihopemine@gmail.com)
  */
-#include "shapes.h"
+#include "CNG/graphics/shapes.h"
 
 void CNG_Rect_draw(CNG_Rect *rect, CNG_Window *window) {
 	SDL_SetRenderDrawColor(

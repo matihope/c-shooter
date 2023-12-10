@@ -6,8 +6,6 @@
 
 #include "../player/player.h"
 
-#include <CNG/CNG.h>
-
 bool Game_init(Game *game, int argc, const char *argv[]) {
 	bool success = true;
 
