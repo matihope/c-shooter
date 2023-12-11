@@ -6,6 +6,8 @@
 
 #include "../player/player.h"
 
+#include <pthread.h>
+
 bool Game_init(Game *game, int argc, const char *argv[]) {
 	bool success = true;
 
@@ -43,7 +45,9 @@ void Game_run(Game *game) {
 		float dt = (float) (SDL_GetTicks() - ticks) / 1000.f;
 		ticks    = SDL_GetTicks();
 
+		pthread_mutex_lock(&game->server.mutex);
 		Player_update(&player, dt);
+		pthread_mutex_unlock(&game->server.mutex);
 
 		CNG_Window_clear(&game->window, BACKGROUND_COLOR);
 

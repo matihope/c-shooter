@@ -1,3 +1,2 @@
 add_subdirectory(engine)
-add_subdirectory(client)
-add_subdirectory(server)
+add_subdirectory(c-shooter)

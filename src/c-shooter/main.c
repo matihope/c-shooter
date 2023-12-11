@@ -1,5 +1,6 @@
 #include "CNG/network.h"
 #include "game/game.h"
+#include "player/player.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -16,14 +17,26 @@ int main(int argc, const char *args[]) {
 	buffer.size = strlen(buffer.buffer);
 
 	CNG_Server_send(&server, &buffer, &server_addr);
-
 	CNG_Server_receive(&server, &buffer, &server_addr);
+
 	uint16_t my_id;
 	memcpy(&my_id, buffer.buffer, sizeof(my_id));
-	memset(buffer.buffer, 0, 256);
-
 	printf("My id: %u\n", my_id);
 
+	PlayerFeatures features;
+	features.id = my_id;
+	srand(my_id);
+	features.color = (CNG_Color){
+		.r = rand() % 255,
+		.g = rand() % 255,
+		.b = rand() % 255,
+		.a = 255,
+	};
+
+	memcpy(buffer.buffer, &features, sizeof(features));
+	CNG_Server_send(&server, &buffer, &server_addr);
+
+	memset(buffer.buffer, 0, 256);
 	while (1) {
 		CNG_Server_receive(&server, &buffer, &server_addr);
 		printf("Server says: %s\n", buffer.buffer);

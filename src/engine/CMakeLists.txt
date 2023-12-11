@@ -18,3 +18,4 @@ add_library(c_engine
         include/CNG/graphics/base.h
 )
 target_include_directories(c_engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(c_engine SDL2)

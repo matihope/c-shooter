@@ -9,18 +9,7 @@
 
 #include <pthread.h>
 
-static bool compare_clients(void *a, void *b) {
-	CNG_Server_Address *client_a = a;
-	CNG_Server_Address *client_b = b;
-	if (client_a->addr_size == client_b->addr_size) return true;
-	if (client_a->addr.sin_addr.s_addr == client_b->addr.sin_addr.s_addr)
-		return true;
-	if (client_a->addr.sin_port == client_b->addr.sin_port) return true;
-
-	return false;
-}
-
-int CNG_GameServer_init(CNG_GameServer *game_server, uint32_t port) {
+int CNG_GameServer_init(CNG_GameServer *game_server) {
 	game_server->quit = false;
 	if (pthread_mutex_init(&game_server->mutex, NULL) != 0) {
 		printf("\nmutex init failed\n");
@@ -32,12 +21,14 @@ int CNG_GameServer_init(CNG_GameServer *game_server, uint32_t port) {
 		return -1;
 	}
 
-	CNG_Collection_init(&game_server->client_collection, compare_clients);
 
 	if (CNG_Server_init(&game_server->server) != 0) return -1;
-	CNG_Server_host(&game_server->server, port);
 
 	return 0;
+}
+
+void CNG_GameServer_host(CNG_GameServer *game_server, uint32_t port) {
+	CNG_Server_host(&game_server->server, port);
 }
 
 void CNG_GameServer_destroy(CNG_GameServer *game_server) {
@@ -45,9 +36,6 @@ void CNG_GameServer_destroy(CNG_GameServer *game_server) {
 
 	pthread_mutex_destroy(&game_server->mutex);
 	pthread_cond_destroy(&game_server->condition);
-
-	CNG_Collection_freeElements(&game_server->client_collection);
-	CNG_Collection_destroy(&game_server->client_collection);
 
 	CNG_Server_close(&game_server->server);
 }

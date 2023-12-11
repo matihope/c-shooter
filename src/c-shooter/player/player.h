@@ -9,6 +9,17 @@
 #include <CNG/graphics.h>
 
 typedef struct {
+	uint16_t     id;
+	CNG_Color    color;
+	CNG_Vector2f position;
+} PlayerFeatures;
+
+typedef struct {
+	uint16_t     id;
+	CNG_Vector2f position;
+} PlayerNewPosition;
+
+typedef struct {
 	CNG_Rect rect;
 } Player;
 
