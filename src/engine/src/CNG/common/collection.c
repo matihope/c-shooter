@@ -65,3 +65,14 @@ void CNG_Collection_freeElements(CNG_Collection *collection) {
 size_t CNG_Collection_size(CNG_Collection *collection) {
 	return collection->elements;
 }
+
+int CNG_CollectionIterator_find(
+	CNG_Collection *collection, void *value, CNG_CollectionIterator *result
+) {
+	CNG_CollectionIterator_init(result);
+	while (CNG_CollectionIterator_next(collection, result))
+		if (collection->data_cmp_func(result->data, value)) return 1;
+	result->data  = NULL;
+	result->index = -1;
+	return 0;
+}

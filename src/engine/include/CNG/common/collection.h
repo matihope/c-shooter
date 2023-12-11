@@ -46,4 +46,8 @@ int CNG_CollectionIterator_next(
 	CNG_Collection *collection, CNG_CollectionIterator *iterator
 );
 
+int CNG_CollectionIterator_find(
+	CNG_Collection *collection, void *value, CNG_CollectionIterator *result
+);
+
 #endif

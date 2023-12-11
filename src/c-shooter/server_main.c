@@ -1,5 +1,7 @@
 #include "CNG/common/collection.h"
 #include "CNG/network.h"
+#include "event/event.h"
+#include "player/player.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -108,19 +110,23 @@ int main() {
 			printf(":%u", ntohs(client_addr->addr.sin_port));
 			printf("!\n");
 
-			uint16_t client_id = CNG_Collection_size(&client_collection);
-			printf("New client\'s id: %u\n", client_id);
+			CNG_Event event;
+			event.type               = CNG_EventType_Init;
+			event.init.new_client_id = CNG_Collection_size(&client_collection);
+			printf("New client\'s id: %u\n", event.init.new_client_id);
 
-			CNG_ServerMessageBuffer connect_response;
-			memcpy(connect_response.buffer, &client_id, sizeof(client_id));
-			connect_response.size = sizeof(client_id);
-			CNG_Server_send(
-				&game_server.server, &connect_response, client_addr
-			);
+			memcpy(msg_buffer.buffer, &event, sizeof(event));
+			msg_buffer.size = sizeof(CNG_Event);
+			CNG_Server_send(&game_server.server, &msg_buffer, client_addr);
 
 		} else {
 			free(client_addr);
-			//			atof();
+
+
+			//			PlayerFeatures playerFeatures;
+			//			memcpy(&playerFeatures, msg_buffer.buffer,
+			// sizeof(playerFeatures));
+
 			printf("Client says: \"%s\"\n", msg_buffer.buffer);
 		}
 

@@ -55,7 +55,9 @@ static int server_tick_loop(uint32_t tick_number, void *game_server_void) {
 static void *server_tick_thread(void *arg) {
 	void          **args        = arg;
 	CNG_GameServer *game_server = args[0];
-	uint32_t        tick_rate   = args[1];
+	uint32_t        tick_rate;
+	memcpy(&tick_rate, args[1], sizeof(tick_rate));
+	free(args[1]);
 	free(arg);
 
 	printf("Starting server tick thread...\n");
@@ -67,11 +69,10 @@ static void *server_tick_thread(void *arg) {
 void CNG_GameServer_startTicking(
 	CNG_GameServer *game_server, uint32_t tick_rate
 ) {
-	// This is not the best way copy the memory, but it is a bit
-	// funny, at least to me :D
 	void **args = malloc(sizeof(void *) + sizeof(tick_rate));
 	args[0]     = game_server;
-	args[1]     = tick_rate;
+	args[1]     = malloc(sizeof(tick_rate));
+	memcpy(args[1], &tick_rate, sizeof(tick_rate));
 
 	pthread_create(
 		&game_server->ticking_thread, NULL, server_tick_thread, args
