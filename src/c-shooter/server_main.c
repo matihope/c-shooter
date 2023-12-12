@@ -10,17 +10,12 @@
 
 CNG_GameServer game_server;
 CNG_Collection client_collection;
-CNG_Collection player_pos_collection;
+CNG_Collection player_feature_collection;
 pthread_t      sender_tid;
 
-typedef struct {
-	uint16_t id;
-	float    x, y;
-} PlayerPosition;
-
 bool player_pos_cmp(void *player_a, void *player_b) {
-	PlayerPosition *a = player_a;
-	PlayerPosition *b = player_b;
+	PlayerFeatures *a = player_a;
+	PlayerFeatures *b = player_b;
 	return a->id == b->id;
 }
 
@@ -37,6 +32,7 @@ static bool compare_clients(void *a, void *b) {
 
 void *sending_thread(void *arg) {
 	CNG_ServerMessageBuffer message_buffer;
+	message_buffer.size = CNG_BUFFER_SIZE;
 
 	uint32_t my_tick = 0;
 	while (1) {
@@ -76,8 +72,8 @@ void INThandler(int sig) {
 		CNG_Collection_destroy(&client_collection);
 		CNG_GameServer_destroy(&game_server);
 
-		CNG_Collection_freeElements(&player_pos_collection);
-		CNG_Collection_destroy(&player_pos_collection);
+		CNG_Collection_freeElements(&player_feature_collection);
+		CNG_Collection_destroy(&player_feature_collection);
 		exit(0);
 	} else
 		signal(SIGINT, INThandler);
@@ -85,7 +81,7 @@ void INThandler(int sig) {
 }
 
 int main() {
-	CNG_Collection_init(&player_pos_collection, player_pos_cmp);
+	CNG_Collection_init(&player_feature_collection, player_pos_cmp);
 	CNG_Collection_init(&client_collection, compare_clients);
 
 	CNG_GameServer_init(&game_server);
@@ -95,39 +91,71 @@ int main() {
 	pthread_create(&sender_tid, NULL, sending_thread, NULL);
 
 	signal(SIGINT, INThandler);
+	CNG_Event               event;
+	CNG_ServerMessageBuffer msg_buffer;
+	msg_buffer.size = sizeof(CNG_Event);
+
 	while (1) {
 		CNG_Server_Address *client_addr = malloc(sizeof(CNG_Server_Address));
-		CNG_ServerMessageBuffer msg_buffer;
 		CNG_Server_receive(&game_server.server, &msg_buffer, client_addr);
+		memcpy(&event, msg_buffer.buffer, sizeof(event));
 
 		pthread_mutex_lock(&game_server.mutex);
 		if (CNG_Collection_insert(&client_collection, client_addr)) {
-			printf(
-				"Client connected with msg \"%s\" from addr: ",
-				msg_buffer.buffer
-			);
+			// Display new client's address
+			printf("Client connected from addr: ");
 			print_addr(ntohl(client_addr->addr.sin_addr.s_addr));
 			printf(":%u", ntohs(client_addr->addr.sin_port));
 			printf("!\n");
 
-			CNG_Event event;
-			event.type               = CNG_EventType_Init;
-			event.init.new_client_id = CNG_Collection_size(&client_collection);
-			printf("New client\'s id: %u\n", event.init.new_client_id);
-
-			memcpy(msg_buffer.buffer, &event, sizeof(event));
-			msg_buffer.size = sizeof(CNG_Event);
+			// Send them their new id
+			CNG_Event response_event;
+			response_event.type = CNG_EventType_Init;
+			response_event.init.new_client_id
+				= CNG_Collection_size(&client_collection);
+			printf("New client\'s id: %u\n", response_event.init.new_client_id);
+			memcpy(msg_buffer.buffer, &response_event, sizeof(CNG_Event));
 			CNG_Server_send(&game_server.server, &msg_buffer, client_addr);
 
+			// Send other clients' features
+			response_event.type = CNG_EventType_InitFeatures;
+			CNG_CollectionIterator it;
+			CNG_CollectionIterator_init(&it);
+			while (CNG_CollectionIterator_next(&player_feature_collection, &it)
+			) {
+				memcpy(
+					&response_event.features, it.data, sizeof(PlayerFeatures)
+				);
+				memcpy(&msg_buffer.buffer, &response_event, sizeof(CNG_Event));
+				CNG_Server_send(&game_server.server, &msg_buffer, client_addr);
+			}
 		} else {
 			free(client_addr);
+		}
 
+		switch (event.type) {
+		case CNG_EventType_Init:
+			break;
+		case CNG_EventType_InitFeatures: {
+			// Store the features
+			PlayerFeatures *ft = malloc(sizeof(PlayerFeatures));
+			CNG_Collection_insert(&player_feature_collection, ft);
 
-			//			PlayerFeatures playerFeatures;
-			//			memcpy(&playerFeatures, msg_buffer.buffer,
-			// sizeof(playerFeatures));
-
-			printf("Client says: \"%s\"\n", msg_buffer.buffer);
+			// Notify all the clients about the new client's features
+			CNG_CollectionIterator it;
+			CNG_CollectionIterator_init(&it);
+			memcpy(&msg_buffer.buffer, &event, sizeof(event));
+			while (CNG_CollectionIterator_next(&client_collection, &it))
+				CNG_Server_send(&game_server.server, &msg_buffer, it.data);
+		} break;
+		case CNG_EventType_PlayerMove: {
+			CNG_CollectionIterator it;
+			CNG_CollectionIterator_find(
+				&player_feature_collection, &event.move.player_id, &it
+			);
+			PlayerFeatures *playerFeatures = it.data;
+			playerFeatures->position       = event.move.new_pos;
+		} break;
 		}
 
 		pthread_mutex_unlock(&game_server.mutex);

@@ -5,6 +5,7 @@
 
 #include "CNG/network/server.h"
 
+#include <assert.h>
 #include <netdb.h>
 
 int CNG_Server_init(CNG_Server *server) {
@@ -41,14 +42,15 @@ void CNG_Server_receive(
 	CNG_Server_Address      *addr
 ) {
 	addr->addr_size = sizeof(addr->addr);
-	buffer->size    = recvfrom(
-        server->socket_fd,
-        buffer->buffer,
-        CNG_BUFFER_SIZE,
-        0,
-        (struct sockaddr *) &addr->addr,
-        &addr->addr_size
-    );
+	assert(buffer->size <= CNG_BUFFER_SIZE);
+	buffer->size = recvfrom(
+		server->socket_fd,
+		buffer->buffer,
+		buffer->size,
+		0,
+		(struct sockaddr *) &addr->addr,
+		&addr->addr_size
+	);
 	if (buffer->size < 0) {
 		perror("recvfrom (server)");
 		exit(EXIT_FAILURE);

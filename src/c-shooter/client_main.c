@@ -3,7 +3,6 @@
 #include "game/game.h"
 #include "player/player.h"
 
-#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -14,19 +13,21 @@ int main(int argc, const char *args[]) {
 		return 1;
 	}
 
+	CNG_Event event;
+	event.type               = CNG_EventType_Init;
+	event.init.new_client_id = -1;
 	CNG_ServerMessageBuffer buffer;
-	strcpy(buffer.buffer, "connect");
-	buffer.size = strlen(buffer.buffer);
+	buffer.size = sizeof(event);
 
 	CNG_Server_send(&game.server.server, &buffer, &game.server_addr);
 	CNG_Server_receive(&game.server.server, &buffer, &game.server_addr);
 
-	CNG_Event event;
 	memcpy(&event, buffer.buffer, sizeof(event));
 	printf("My id: %u\n", event.init.new_client_id);
 
 	PlayerFeatures features;
 	features.id = event.init.new_client_id;
+
 	srand(features.id);
 	features.color = (CNG_Color){
 		.r = rand() % 255,
@@ -34,20 +35,14 @@ int main(int argc, const char *args[]) {
 		.b = rand() % 255,
 		.a = 255,
 	};
-	memcpy(&game.my_player, &features, sizeof(features));
-	CNG_Collection_insert(&game.player_collection, &features);
+	memcpy(game.my_player, &features, sizeof(features));
+	CNG_Collection_insert(&game.player_collection, game.my_player);
 
-	memcpy(buffer.buffer, &features, sizeof(features));
-	buffer.size = 256;
+	// Notify the server about my features
+	event.type = CNG_EventType_InitFeatures;
+	memcpy(&event.features, &features, sizeof(features));
+	memcpy(buffer.buffer, &event, sizeof(event));
 	CNG_Server_send(&game.server.server, &buffer, &game.server_addr);
-
-	memset(buffer.buffer, 0, 256);
-	//	while (1) {
-	//		CNG_Server_receive(&server, &buffer, &server_addr);
-	//		printf("Server says: %s\n", buffer.buffer);
-	//
-	//		CNG_Server_send(&server, &buffer, &server_addr);
-	//	}
 
 	Game_run(&game);
 	Game_destroy(&game);

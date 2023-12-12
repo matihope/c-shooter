@@ -8,7 +8,7 @@ add_library(c-shooter client_main.c
 target_link_libraries(c-shooter SDL2 c_engine)
 
 add_executable(client client_main.c)
-target_link_libraries(client c_engine)
+target_link_libraries(client c-shooter)
 
 add_executable(server server_main.c)
-target_link_libraries(server c_engine)
+target_link_libraries(server c-shooter)

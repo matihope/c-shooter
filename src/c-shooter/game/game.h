@@ -24,8 +24,8 @@ typedef struct {
 	pthread_t          sending_thread;
 	pthread_t          receiving_thread;
 
-	PlayerFeatures my_player;
-	CNG_Collection player_collection;  // of PlayerFeatures
+	PlayerFeatures *my_player;
+	CNG_Collection  player_collection;  // of PlayerFeatures
 } Game;
 
 bool Game_init(Game *game, int argc, const char *argv[]);
