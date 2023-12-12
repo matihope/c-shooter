@@ -57,9 +57,9 @@ void *sending_thread(void *game_void) {
 	while (1) {
 		pthread_mutex_lock(&game->server.mutex);
 
-		//		while (game->current_tick > game->server.current_tick)
-		//			pthread_cond_wait(&game->server.condition,
-		//&game->server.mutex); 		game->current_tick++;
+		while (game->current_tick > game->server.current_tick)
+			pthread_cond_wait(&game->server.condition, &game->server.mutex);
+		game->current_tick++;
 
 		CNG_Event event;
 		event.type           = CNG_EventType_PlayerMove;
