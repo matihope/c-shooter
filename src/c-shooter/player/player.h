@@ -12,6 +12,7 @@ typedef struct {
 	uint16_t     id;
 	CNG_Color    color;
 	CNG_Vector2f position;
+	uint32_t     tick_origin;
 } PlayerFeatures;
 
 typedef struct {

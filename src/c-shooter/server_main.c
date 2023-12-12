@@ -42,31 +42,29 @@ void *sending_thread(void *arg) {
 			pthread_cond_wait(&game_server.condition, &game_server.mutex);
 		my_tick++;
 
-		if (my_tick + 1 < game_server.current_tick)
+		if (my_tick + 1 < game_server.current_tick) {
 			printf(
 				"Can't keep up! Skipped ticks: %d\n",
 				game_server.current_tick - my_tick
 			);
+			my_tick = game_server.current_tick;
+		}
 
 
 		CNG_CollectionIterator client_addr_it;
 		CNG_CollectionIterator_init(&client_addr_it);
 		while (CNG_CollectionIterator_next(&client_collection, &client_addr_it)
 		) {
-			//			printf(
-			//				"Sending to client: %u\n",
-			//				((CNG_Server_Address *)
-			// client_addr_it.data)->addr.sin_port
-			//			);
 			CNG_CollectionIterator player_pos_it;
 			CNG_CollectionIterator_init(&player_pos_it);
 			while (CNG_CollectionIterator_next(
 				&player_feature_collection, &player_pos_it
 			)) {
-				PlayerFeatures *ft   = player_pos_it.data;
-				event.type           = CNG_EventType_PlayerMove;
-				event.move.player_id = ft->id;
-				event.move.new_pos   = ft->position;
+				PlayerFeatures *ft     = player_pos_it.data;
+				event.type             = CNG_EventType_PlayerMove;
+				event.move.player_id   = ft->id;
+				event.move.new_pos     = ft->position;
+				event.move.tick_origin = ft->tick_origin;
 				memcpy(message_buffer.buffer, &event, sizeof(event));
 				CNG_Server_send(
 					&game_server.server, &message_buffer, client_addr_it.data
@@ -102,7 +100,6 @@ int main() {
 	CNG_GameServer_startTicking(&game_server, 128);
 
 	pthread_create(&sender_tid, NULL, sending_thread, NULL);
-
 
 	signal(SIGINT, INThandler);
 	signal(SIGTERM, INThandler);
@@ -179,7 +176,10 @@ int main() {
 			);
 			if (it.index != -1) {
 				PlayerFeatures *playerFeatures = it.data;
-				playerFeatures->position       = event.move.new_pos;
+				if (playerFeatures->tick_origin < event.move.tick_origin) {
+					playerFeatures->position    = event.move.new_pos;
+					playerFeatures->tick_origin = event.move.tick_origin;
+				}
 			}
 		} break;
 		}

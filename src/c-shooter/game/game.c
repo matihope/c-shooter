@@ -62,10 +62,10 @@ void *sending_thread(void *game_void) {
 		game->current_tick++;
 
 		CNG_Event event;
-		event.type           = CNG_EventType_PlayerMove;
-		event.move.player_id = game->my_player->id;
-		event.move.new_pos.x = game->my_player->position.x;
-		event.move.new_pos.y = game->my_player->position.y;
+		event.type             = CNG_EventType_PlayerMove;
+		event.move.player_id   = game->my_player->id;
+		event.move.new_pos     = game->my_player->position;
+		event.move.tick_origin = game->my_player->tick_origin;
 		memcpy(msg.buffer, &event, sizeof(event));
 
 		CNG_Server_send(&game->server.server, &msg, &game->server_addr);
@@ -106,7 +106,10 @@ void *receiving_thread(void *game_void) {
 			);
 			if (it.index != -1) {
 				PlayerFeatures *features = it.data;
-				features->position       = event.move.new_pos;
+				if (features->tick_origin < event.move.tick_origin) {
+					features->position    = event.move.new_pos;
+					features->tick_origin = event.move.tick_origin;
+				}
 			}
 		} break;
 		default:
@@ -145,7 +148,8 @@ void Game_run(Game *game) {
 		pthread_mutex_lock(&game->server.mutex);
 
 		Player_update(&player, dt);
-		game->my_player->position = player.rect.position;
+		game->my_player->position    = player.rect.position;
+		game->my_player->tick_origin = game->current_tick;
 
 		CNG_Window_clear(&game->window, BACKGROUND_COLOR);
 

@@ -25,6 +25,7 @@ typedef struct {
 	enum CNG_EventType type;  // CNG_EventType_PlayerMove
 	uint16_t           player_id;
 	CNG_Vector2f       new_pos;
+	uint32_t           tick_origin;
 } CNG_Event_PlayerMove;
 
 typedef struct {
