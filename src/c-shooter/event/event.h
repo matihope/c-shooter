@@ -29,7 +29,6 @@ typedef struct {
 
 typedef struct {
 	enum CNG_EventType type;  // CNG_EventType_InitFeatures
-	uint16_t           player_id;
 	PlayerFeatures     features;
 } CNG_Event_InitFeatures;
 

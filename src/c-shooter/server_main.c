@@ -53,6 +53,11 @@ void *sending_thread(void *arg) {
 		CNG_CollectionIterator_init(&client_addr_it);
 		while (CNG_CollectionIterator_next(&client_collection, &client_addr_it)
 		) {
+			//			printf(
+			//				"Sending to client: %u\n",
+			//				((CNG_Server_Address *)
+			//client_addr_it.data)->addr.sin_port
+			//			);
 			CNG_CollectionIterator player_pos_it;
 			CNG_CollectionIterator_init(&player_pos_it);
 			while (CNG_CollectionIterator_next(
@@ -62,9 +67,9 @@ void *sending_thread(void *arg) {
 				event.type           = CNG_EventType_PlayerMove;
 				event.move.player_id = ft->id;
 				event.move.new_pos   = ft->position;
-				memcpy(&message_buffer.buffer, &event, sizeof(event));
+				memcpy(message_buffer.buffer, &event, sizeof(event));
 				CNG_Server_send(
-					&game_server.server, &message_buffer, player_pos_it.data
+					&game_server.server, &message_buffer, client_addr_it.data
 				);
 			}
 		}
@@ -75,24 +80,17 @@ void *sending_thread(void *arg) {
 }
 
 void INThandler(int sig) {
-	int c;
-
+	printf("Shutting the server down...\n");
 	signal(sig, SIG_IGN);
-	printf("You hit Ctrl-C - do you really want to quit? [y/n] ");
-	c = getchar();
-	if (c == 'y' || c == 'Y') {
-		pthread_cancel(sender_tid);
+	pthread_cancel(sender_tid);
 
-		CNG_Collection_freeElements(&client_collection);
-		CNG_Collection_destroy(&client_collection);
-		CNG_GameServer_destroy(&game_server);
+	CNG_Collection_freeElements(&client_collection);
+	CNG_Collection_destroy(&client_collection);
+	CNG_GameServer_destroy(&game_server);
 
-		CNG_Collection_freeElements(&player_feature_collection);
-		CNG_Collection_destroy(&player_feature_collection);
-		exit(0);
-	} else
-		signal(SIGINT, INThandler);
-	getchar();  // Get new line character
+	CNG_Collection_freeElements(&player_feature_collection);
+	CNG_Collection_destroy(&player_feature_collection);
+	exit(0);
 }
 
 int main() {
@@ -105,7 +103,9 @@ int main() {
 
 	pthread_create(&sender_tid, NULL, sending_thread, NULL);
 
+
 	signal(SIGINT, INThandler);
+	signal(SIGTERM, INThandler);
 	CNG_Event               event;
 	CNG_ServerMessageBuffer msg_buffer;
 	msg_buffer.size = sizeof(CNG_Event);
@@ -148,12 +148,18 @@ int main() {
 			free(client_addr);
 		}
 
+		if (event.type != 2) printf("Event type %u \n", event.type);
+
 		switch (event.type) {
 		case CNG_EventType_Init:
 			break;
 		case CNG_EventType_InitFeatures: {
 			// Store the features
+			printf(
+				"Inserting features of player: %u\n", event.features.features.id
+			);
 			PlayerFeatures *ft = malloc(sizeof(PlayerFeatures));
+			memcpy(ft, &event.features, sizeof(PlayerFeatures));
 			CNG_Collection_insert(&player_feature_collection, ft);
 
 			// Notify all the clients about the new client's features
@@ -176,7 +182,5 @@ int main() {
 		}
 
 		pthread_mutex_unlock(&game_server.mutex);
-
-		if (strcmp(msg_buffer.buffer, "exit") == 0) break;
 	}
 }

@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <netdb.h>
+#include <signal.h>
 
 int CNG_Server_init(CNG_Server *server) {
 	server->socket_fd = socket(PF_INET, SOCK_DGRAM, 0);
@@ -53,7 +54,7 @@ void CNG_Server_receive(
 	);
 	if (buffer->size < 0) {
 		perror("recvfrom (server)");
-		exit(EXIT_FAILURE);
+		raise(SIGTERM);
 	}
 }
 
@@ -73,7 +74,7 @@ void CNG_Server_send(
 
 	if (n < 0) {
 		perror("sendto (server)");
-		exit(EXIT_FAILURE);
+		raise(SIGTERM);
 	}
 }
 
@@ -111,7 +112,7 @@ int CNG_Server_createConnection(
 	host_info             = gethostbyname2(hostname, AF_INET);
 	if (host_info == NULL) {
 		fprintf(stderr, "Unknown host %s.\n", hostname);
-		exit(EXIT_FAILURE);
+		raise(SIGTERM);
 	}
 	addr->addr.sin_addr = *(struct in_addr *) host_info->h_addr_list[0];
 	addr->addr_size     = sizeof(addr->addr);

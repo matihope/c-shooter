@@ -7,6 +7,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#define MAX(a, b) ((a) < (b) ? (b) : (a))
+
 void CNG_startTimerWithFrequency(
 	uint32_t tick_rate, void *arg, int (*callback)(uint32_t, void *)
 ) {
@@ -30,7 +32,7 @@ void CNG_startTimerWithFrequency(
 
 		if (callback(server_ticks++, arg)) break;
 
-		to_sleep = (useconds_t) ((next_update - seconds) * 1e6);
+		to_sleep = (useconds_t) (MAX(0.0, next_update - seconds) * 1e6);
 		usleep(to_sleep);
 		next_update += suspend_time_seconds;
 

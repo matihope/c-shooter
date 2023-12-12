@@ -26,7 +26,4 @@ void CNG_GameServer_startTicking(
 	CNG_GameServer *game_server, uint32_t tick_rate
 );
 
-typedef struct {
-} CNG_GameServerClient;
-
 #endif

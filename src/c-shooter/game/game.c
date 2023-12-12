@@ -74,19 +74,30 @@ void *sending_thread(void *game_void) {
 }
 
 void *receiving_thread(void *game_void) {
-	Game                   *game = game_void;
+	Game *game = game_void;
+
 	CNG_ServerMessageBuffer msg;
+	msg.size = sizeof(CNG_Event);
+
+	CNG_Event event;
+
 	while (1) {
 		CNG_Server_receive(&game->server.server, &msg, &game->server_addr);
 		// handle receiving
-		CNG_Event event;
 		memcpy(&event, msg.buffer, sizeof(event));
 
+		if (event.type != CNG_EventType_PlayerMove)
+			printf("Received event: %u\n", event.type);
 		pthread_mutex_lock(&game->server.mutex);
+
 		switch (event.type) {
 		case CNG_EventType_InitFeatures: {
-			PlayerFeatures features;
-			memcpy(&features, &event.features, sizeof(features));
+			PlayerFeatures *features = malloc(sizeof(PlayerFeatures));
+			memcpy(features, &event.features.features, sizeof(PlayerFeatures));
+			if (CNG_Collection_insert(&game->player_collection, features))
+				printf("Inserting player with id: %u\n", features->id);
+			else
+				free(features);
 		} break;
 		case CNG_EventType_PlayerMove: {
 			CNG_CollectionIterator it;
