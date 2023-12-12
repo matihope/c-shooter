@@ -34,6 +34,7 @@ int main(int argc, const char *args[]) {
 		.b = rand() % 255,
 		.a = 255,
 	};
+	game.my_player->tick_origin = 0;
 
 	// Notify the server about my features
 	event.type = CNG_EventType_InitFeatures;
