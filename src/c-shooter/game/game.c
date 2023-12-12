@@ -33,7 +33,11 @@ bool Game_init(Game *game, int argc, const char *argv[]) {
 	CNG_GameServer_init(&game->server);
 	CNG_GameServer_startTicking(&game->server, 128);
 
-	CNG_Server_createConnection(&game->server_addr, "localhost", 7878);
+	const char *addr = "localhost";
+	if (argc > 1) addr = argv[1];
+
+	CNG_Server_createConnection(&game->server_addr, addr, 7878);
+
 	CNG_Collection_init(&game->player_collection, player_feature_cmp);
 	CNG_Collection_insert(&game->player_collection, game->my_player);
 
