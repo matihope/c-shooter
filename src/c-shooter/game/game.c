@@ -35,16 +35,16 @@ bool Game_init(Game *game, int argc, const char *argv[]) {
 
 	CNG_Server_createConnection(&game->server_addr, "localhost", 7878);
 	CNG_Collection_init(&game->player_collection, player_feature_cmp);
-	CNG_Collection_insert(&game->player_collection, &game->my_player);
+	CNG_Collection_insert(&game->player_collection, game->my_player);
 
 	return success;
 }
 
 void Game_destroy(Game *game) {
-	CNG_Window_destroy(&game->window);
-	CNG_GameServer_destroy(&game->server);
 	pthread_cancel(game->sending_thread);
 	pthread_cancel(game->receiving_thread);
+	CNG_Window_destroy(&game->window);
+	CNG_GameServer_destroy(&game->server);
 	CNG_Collection_freeElements(&game->player_collection);
 	CNG_Collection_destroy(&game->player_collection);
 }
@@ -76,18 +76,17 @@ void *sending_thread(void *game_void) {
 void *receiving_thread(void *game_void) {
 	Game *game = game_void;
 
+	CNG_Event               event;
 	CNG_ServerMessageBuffer msg;
 	msg.size = sizeof(CNG_Event);
 
-	CNG_Event event;
-
 	while (1) {
 		CNG_Server_receive(&game->server.server, &msg, &game->server_addr);
-		// handle receiving
 		memcpy(&event, msg.buffer, sizeof(event));
 
 		if (event.type != CNG_EventType_PlayerMove)
 			printf("Received event: %u\n", event.type);
+
 		pthread_mutex_lock(&game->server.mutex);
 
 		switch (event.type) {

@@ -22,7 +22,7 @@ void CNG_Collection_destroy(CNG_Collection *collection) {
 bool CNG_Collection_insert(CNG_Collection *collection, void *data) {
 	bool unique = true;
 	for (size_t elem_id = 0; elem_id < collection->elements; ++elem_id)
-		if (collection->data_cmp_func(collection->data[elem_id].data, data))
+		if (collection->data_cmp_func(collection->data[elem_id].data_ptr, data))
 			unique = false;
 	if (unique) {
 		collection->elements++;
@@ -34,7 +34,7 @@ bool CNG_Collection_insert(CNG_Collection *collection, void *data) {
 			);
 			if (new_data) collection->data = new_data;
 		}
-		collection->data[collection->elements - 1].data = data;
+		collection->data[collection->elements - 1].data_ptr = data;
 	}
 	return unique;
 }
@@ -52,7 +52,7 @@ int CNG_CollectionIterator_next(
 		iterator->data = NULL;
 		return false;
 	}
-	iterator->data = collection->data[iterator->index].data;
+	iterator->data = collection->data[iterator->index].data_ptr;
 	return true;
 }
 

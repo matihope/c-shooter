@@ -56,7 +56,7 @@ void *sending_thread(void *arg) {
 			//			printf(
 			//				"Sending to client: %u\n",
 			//				((CNG_Server_Address *)
-			//client_addr_it.data)->addr.sin_port
+			// client_addr_it.data)->addr.sin_port
 			//			);
 			CNG_CollectionIterator player_pos_it;
 			CNG_CollectionIterator_init(&player_pos_it);
@@ -139,7 +139,9 @@ int main() {
 			while (CNG_CollectionIterator_next(&player_feature_collection, &it)
 			) {
 				memcpy(
-					&response_event.features, it.data, sizeof(PlayerFeatures)
+					&response_event.features.features,
+					it.data,
+					sizeof(PlayerFeatures)
 				);
 				memcpy(&msg_buffer.buffer, &response_event, sizeof(CNG_Event));
 				CNG_Server_send(&game_server.server, &msg_buffer, client_addr);
@@ -158,8 +160,9 @@ int main() {
 			printf(
 				"Inserting features of player: %u\n", event.features.features.id
 			);
+
 			PlayerFeatures *ft = malloc(sizeof(PlayerFeatures));
-			memcpy(ft, &event.features, sizeof(PlayerFeatures));
+			memcpy(ft, &event.features.features, sizeof(PlayerFeatures));
 			CNG_Collection_insert(&player_feature_collection, ft);
 
 			// Notify all the clients about the new client's features

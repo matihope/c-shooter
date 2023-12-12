@@ -13,7 +13,7 @@ typedef struct CNG_Collection         CNG_Collection;
 typedef struct CNG_CollectionIterator CNG_CollectionIterator;
 
 struct CNG_CollectionItem {
-	void *data;
+	void *data_ptr;
 };
 
 struct CNG_Collection {
