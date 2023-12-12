@@ -32,7 +32,8 @@ static bool compare_clients(void *a, void *b) {
 
 void *sending_thread(void *arg) {
 	CNG_ServerMessageBuffer message_buffer;
-	message_buffer.size = CNG_BUFFER_SIZE;
+	message_buffer.size = sizeof(CNG_Event);
+	CNG_Event event;
 
 	uint32_t my_tick = 0;
 	while (1) {
@@ -41,19 +42,33 @@ void *sending_thread(void *arg) {
 			pthread_cond_wait(&game_server.condition, &game_server.mutex);
 		my_tick++;
 
-		sprintf(message_buffer.buffer, "%d", my_tick);
-		message_buffer.size = strlen(message_buffer.buffer);
-
 		if (my_tick + 1 < game_server.current_tick)
 			printf(
 				"Can't keep up! Skipped ticks: %d\n",
 				game_server.current_tick - my_tick
 			);
 
-		CNG_CollectionIterator it;
-		CNG_CollectionIterator_init(&it);
-		while (CNG_CollectionIterator_next(&client_collection, &it))
-			CNG_Server_send(&game_server.server, &message_buffer, it.data);
+
+		CNG_CollectionIterator client_addr_it;
+		CNG_CollectionIterator_init(&client_addr_it);
+		while (CNG_CollectionIterator_next(&client_collection, &client_addr_it)
+		) {
+			CNG_CollectionIterator player_pos_it;
+			CNG_CollectionIterator_init(&player_pos_it);
+			while (CNG_CollectionIterator_next(
+				&player_feature_collection, &player_pos_it
+			)) {
+				PlayerFeatures *ft   = player_pos_it.data;
+				event.type           = CNG_EventType_PlayerMove;
+				event.move.player_id = ft->id;
+				event.move.new_pos   = ft->position;
+				memcpy(&message_buffer.buffer, &event, sizeof(event));
+				CNG_Server_send(
+					&game_server.server, &message_buffer, player_pos_it.data
+				);
+			}
+		}
+
 
 		pthread_mutex_unlock(&game_server.mutex);
 	}
@@ -153,8 +168,10 @@ int main() {
 			CNG_CollectionIterator_find(
 				&player_feature_collection, &event.move.player_id, &it
 			);
-			PlayerFeatures *playerFeatures = it.data;
-			playerFeatures->position       = event.move.new_pos;
+			if (it.index != -1) {
+				PlayerFeatures *playerFeatures = it.data;
+				playerFeatures->position       = event.move.new_pos;
+			}
 		} break;
 		}
 
